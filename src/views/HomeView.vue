@@ -1,11 +1,29 @@
 <script setup lang="ts">
 import toThousands from '@/utils/toThousands'
-import { useOrderBookSocket } from '@/composables/useOrderBookSocket'
+// import { useOrderBookSocket } from '@/composables/useOrderBookSocket'
+import { useOrderBookStore } from '@/stores/orderBook'
 import { useLastPriceStore } from '@/stores/lastPrice'
 import { computed } from 'vue'
-const { data } = useOrderBookSocket()
+// const { data } = useOrderBookSocket()
 
+const orderBookStore = useOrderBookStore()
 const lastPriceStore = useLastPriceStore() // 自動初始化，無須呼叫 useLastPriceSocket()
+
+const isNewPrice = (side: 'ask' | 'bid', price: string) => {
+  const prev = side === 'ask' ? orderBookStore.prevAsks : orderBookStore.prevBids
+  return !prev.some(([p]) => p === price)
+}
+
+const getSizeChangeClass = (side: 'ask' | 'bid', price: string, size: string) => {
+  const prev = side === 'ask' ? orderBookStore.prevAsks : orderBookStore.prevBids
+  const match = prev.find(([p]) => p === price)
+  if (!match) return ''
+  const prevSize = parseFloat(match[1])
+  const currSize = parseFloat(size)
+  if (currSize > prevSize) return 'flash-green'
+  if (currSize < prevSize) return 'flash-red'
+  return ''
+}
 
 const lastPriceClass = computed(() => {
   const current = lastPriceStore.currentLastPrice
@@ -22,22 +40,28 @@ const lastPriceClass = computed(() => {
     <!-- <pre>data: {{ data }}</pre> -->
     <div class="orderbook">
       <div class="quote-row heading">
-        <div>Price</div>
+        <div>Price (USD)</div>
         <div class="size">Size</div>
         <div class="total">Total</div>
       </div>
+      <!-- 賣單 -->
       <div
         class="quote-row sell"
-        v-for="([price, size], idx) in data?.data.asks.slice(-8)"
+        v-for="({ price, size, accum, percent }, idx) in orderBookStore.askLevelsWithTotal"
         :key="`ask-${idx}`"
+        :class="{ 'row-highlight-red': isNewPrice('ask', price) }"
       >
         <div class="price">{{ toThousands(price) }}</div>
-        <div class="size">{{ toThousands(size) }}</div>
+        <div class="size" :class="getSizeChangeClass('ask', price, size)">
+          {{ toThousands(size) }}
+        </div>
         <div class="total">
-          <div class="total-bar" :style="{ width: +'%' }"></div>
-          5,657
+          <div class="total-bar" :style="{ width: percent }"></div>
+          {{ toThousands(accum) }}
         </div>
       </div>
+
+      <!-- 最新成交價 -->
       <div class="last-price" :class="lastPriceClass">
         {{ toThousands(lastPriceStore.currentLastPrice.toFixed(1)) }}
         <svg
@@ -58,16 +82,21 @@ const lastPriceClass = computed(() => {
           <polyline points="19 12 12 19 5 12"></polyline>
         </svg>
       </div>
+
+      <!-- 買單 -->
       <div
         class="quote-row buy"
-        v-for="([price, size], idx) in data?.data.bids.slice(0, 8)"
+        v-for="({ price, size, accum, percent }, idx) in orderBookStore.bidLevelsWithTotal"
         :key="`bid-${idx}`"
+        :class="{ 'row-highlight-green': isNewPrice('bid', price) }"
       >
         <div class="price">{{ toThousands(price) }}</div>
-        <div class="size">{{ toThousands(size) }}</div>
+        <div class="size" :class="getSizeChangeClass('bid', price, size)">
+          {{ toThousands(size) }}
+        </div>
         <div class="total">
-          <div class="total-bar" :style="{ width: +'%' }"></div>
-          591
+          <div class="total-bar" :style="{ width: percent }"></div>
+          {{ toThousands(accum) }}
         </div>
       </div>
     </div>
@@ -80,13 +109,25 @@ const lastPriceClass = computed(() => {
   flex-direction: column;
   height: calc(100vh - var(--height-header));
   justify-content: space-between;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .quote-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr) 1.75fr;
-  position: relative;
-  padding: 0 8px;
+  grid-template-columns: repeat(2, 1fr) 1.5fr;
+  padding: 0.25rem 1rem;
+  font-size: 1.25rem;
+
+  &:hover {
+    background-color: var(--color-quote-hover-bg) !important;
+  }
+
+  .price,
+  .size,
+  .total {
+    height: 100%;
+  }
 
   .size,
   .total {
@@ -97,6 +138,7 @@ const lastPriceClass = computed(() => {
 .heading {
   color: var(--color-heading);
   font-weight: normal;
+  font-size: 1rem;
 }
 
 .sell .price {
@@ -106,12 +148,24 @@ const lastPriceClass = computed(() => {
   color: var(--color-quote-buy);
 }
 
+.total {
+  position: relative;
+  margin-left: 1rem;
+}
+
 .total-bar {
   position: absolute;
   right: 0;
   height: 100%;
-  background-color: rgba(0, 177, 93, 0.12); /* or red for sell */
   z-index: 0;
+}
+
+.buy .total-bar {
+  background-color: var(--color-quote-buy-bar);
+}
+
+.sell .total-bar {
+  background-color: var(--color-quote-sell-bar);
 }
 
 .last-price {
@@ -120,6 +174,7 @@ const lastPriceClass = computed(() => {
   justify-content: center;
   font-size: 1.75rem;
   padding: 0.25rem;
+  margin: 0.25rem;
 
   &--up {
     color: var(--color-lastprice-up);
@@ -145,5 +200,33 @@ const lastPriceClass = computed(() => {
 
 .arrow-icon {
   margin-left: 0.5rem;
+}
+
+.row-highlight-green,
+.flash-green {
+  animation: flash-green 0.3s ease-out;
+}
+
+.row-highlight-red,
+.flash-red {
+  animation: flash-red 0.3s ease-out;
+}
+
+@keyframes flash-green {
+  from {
+    background-color: var(--color-flash-green);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes flash-red {
+  from {
+    background-color: var(--color-flash-red);
+  }
+  to {
+    background-color: transparent;
+  }
 }
 </style>
