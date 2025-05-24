@@ -28,20 +28,6 @@
   --height-header: 56px;
 }
 
-// @media (prefers-color-scheme: dark) {
-//   :root {
-//     --color-background: var(--vt-c-black);
-//     --color-background-soft: var(--vt-c-black-soft);
-//     --color-background-mute: var(--vt-c-black-mute);
-
-//     --color-border: var(--vt-c-divider-dark-2);
-//     --color-border-hover: var(--vt-c-divider-dark-1);
-
-//     --color-heading: var(--vt-c-text-dark-1);
-//     --color-text: var(--vt-c-text-dark-2);
-//   }
-// }
-
 *,
 *::before,
 *::after {
@@ -69,7 +55,6 @@ body {
     'Droid Sans',
     'Helvetica Neue',
     sans-serif;
-  font-size: 20px;
   font-weight: bold;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -79,31 +64,4 @@ body {
 #app {
   max-width: 1280px;
   margin: 0 auto;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
 }
