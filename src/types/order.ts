@@ -1,11 +1,6 @@
-export interface OrderBookMessage {
-  topic: string
-  data: OrderBookData
-}
-
 export type QuoteLevel = [string, string]
 
-export interface OrderBookData {
+interface OrderBookData {
   bids: QuoteLevel[]
   asks: QuoteLevel[]
   seqNum: number
@@ -13,4 +8,9 @@ export interface OrderBookData {
   type: 'snapshot' | 'delta'
   timestamp: number
   symbol: string
+}
+
+export interface OrderBookMessage {
+  topic: string
+  data: OrderBookData
 }
