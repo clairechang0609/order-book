@@ -6,7 +6,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/order-book/',
+  base: process.env.NODE_ENV === 'production' ? '/order-book/' : '/',
   plugins: [vue(), vueDevTools()],
   resolve: {
     alias: {
