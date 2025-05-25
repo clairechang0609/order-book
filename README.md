@@ -1,23 +1,36 @@
-# order-book
+# Order Book
 
-This template should help get you started developing with Vue 3 in Vite.
+A real-time order book built with Vue 3, TypeScript, and WebSocket.
 
-## Recommended IDE Setup
+## Test Question
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Order Book Technical Challenge:
+  [https://serious-lynx-a67.notion.site/Order-Book-38158d30a1f8415f9823f2c7d7e5d5a1](https://serious-lynx-a67.notion.site/Order-Book-38158d30a1f8415f9823f2c7d7e5d5a1)
 
-## Type Support for `.vue` Imports in TS
+---
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## Demo
 
-## Customize configuration
+- GitHub Pages: [https://clairechang0609.github.io/order-book/](https://clairechang0609.github.io/order-book/)
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+---
+
+## Tech Stack
+
+- [Vue 3](https://vuejs.org/)
+- [Vite](https://vitejs.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Pinia](https://pinia.vuejs.org/)
+- [VueUse](https://vueuse.org/)
+- [SCSS](https://sass-lang.com/)
+
+---
 
 ## Project Setup
 
 ```sh
 npm install
+cp .env.example .env
 ```
 
 ### Compile and Hot-Reload for Development
@@ -30,10 +43,4 @@ npm run dev
 
 ```sh
 npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
 ```
