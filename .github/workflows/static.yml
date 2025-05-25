@@ -38,6 +38,11 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: Generate .env from secrets
+        run: |
+          echo "VITE_WS_HOST=${{ secrets.VITE_WS_HOST }}" >> .env
+          echo "VITE_ORDERBOOK_PATH=${{ secrets.VITE_ORDERBOOK_PATH }}" >> .env
+          echo "VITE_TRADE_PATH=${{ secrets.VITE_TRADE_PATH }}" >> .env
       - name: Build
         run: npm run build
       - name: Setup Pages
