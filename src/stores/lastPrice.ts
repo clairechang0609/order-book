@@ -1,26 +1,23 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useWebSocket } from '@vueuse/core'
+import type { TradeMessage } from '@/types/lastPrice'
 
 const { VITE_WS_HOST, VITE_TRADE_PATH } = import.meta.env
 
-export const useLastPriceStore = defineStore('last-price', () => {
+export const useLastPriceStore = defineStore('lastPrice', () => {
   const previousLastPrice = ref<number>(0)
   const currentLastPrice = ref<number>(0)
 
-  // 初始化 WebSocket
-  const { status, send } = useWebSocket(`wss://${VITE_WS_HOST}${VITE_TRADE_PATH}`, {
+  const { send } = useWebSocket(`wss://${VITE_WS_HOST}${VITE_TRADE_PATH}`, {
     immediate: true,
     onConnected() {
       send(JSON.stringify({ op: 'subscribe', args: ['tradeHistoryApi:BTCPFC'] }))
     },
     onMessage(_, event) {
-      const raw = JSON.parse(event.data)
-      if (raw.topic === 'tradeHistoryApi' && Array.isArray(raw.data)) {
-        const firstTrade = raw.data[0]
-        if (firstTrade?.price) {
-          updateLastPrice(Number(firstTrade.price))
-        }
+      const raw: TradeMessage = JSON.parse(event.data)
+      if (raw.topic === 'tradeHistoryApi') {
+        updateLastPrice(raw.data[0]?.price || 0)
       }
     },
   })
@@ -31,9 +28,7 @@ export const useLastPriceStore = defineStore('last-price', () => {
   }
 
   return {
-    status,
     previousLastPrice,
     currentLastPrice,
-    updateLastPrice,
   }
 })

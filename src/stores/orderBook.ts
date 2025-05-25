@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useWebSocket } from '@vueuse/core'
 import type { QuoteLevel, OrderBookMessage } from '@/types/order'
 
-const { VITE_TEST_WS_HOST, VITE_WS_HOST, VITE_ORDERBOOK_PATH } = import.meta.env
+const { VITE_WS_HOST, VITE_ORDERBOOK_PATH } = import.meta.env
 
 export const useOrderBookStore = defineStore('orderBook', () => {
   const bids = ref<QuoteLevel[]>([])
@@ -12,9 +12,7 @@ export const useOrderBookStore = defineStore('orderBook', () => {
   const prevAsks = ref<QuoteLevel[]>([])
   const lastSeqNum = ref<number | null>(null)
 
-  const wsUrl = `wss://${VITE_WS_HOST}${VITE_ORDERBOOK_PATH}`
-
-  const { send } = useWebSocket(wsUrl, {
+  const { send } = useWebSocket(`wss://${VITE_WS_HOST}${VITE_ORDERBOOK_PATH}`, {
     immediate: true,
     onConnected() {
       send(JSON.stringify({ op: 'subscribe', args: ['update:BTCPFC_0'] }))
@@ -24,6 +22,7 @@ export const useOrderBookStore = defineStore('orderBook', () => {
       if (raw.topic !== 'update:BTCPFC_0') return
 
       const { type, bids: newBids, asks: newAsks, seqNum, prevSeqNum } = raw.data
+
       if (type === 'snapshot') {
         prevBids.value = []
         prevAsks.value = []
@@ -33,9 +32,8 @@ export const useOrderBookStore = defineStore('orderBook', () => {
         return
       }
 
-      // type === 'delta'
+      // detect sequence mismatch
       if (lastSeqNum.value !== prevSeqNum) {
-        // 異常序號，重新訂閱
         send(JSON.stringify({ op: 'unsubscribe', args: ['update:BTCPFC_0'] }))
         send(JSON.stringify({ op: 'subscribe', args: ['update:BTCPFC_0'] }))
         return
@@ -71,7 +69,7 @@ export const useOrderBookStore = defineStore('orderBook', () => {
         (a, b) => parseFloat(b[0]) - parseFloat(a[0]),
       ) as QuoteLevel[]
 
-      // 檢查是否出現 crossed order book
+      // check if order book is crossed (bid >= ask)
       const bestBid = parseFloat(bids.value[0]?.[0])
       const bestAsk = parseFloat(asks.value[0]?.[0])
       if (bestBid >= bestAsk) {
@@ -84,7 +82,7 @@ export const useOrderBookStore = defineStore('orderBook', () => {
     },
   })
 
-  // Accumulative total logic (only for visible rows)
+  // visible rows
   const visibleBids = computed(() => bids.value.slice(0, 8))
   const visibleAsks = computed(() => asks.value.slice(-8))
 
